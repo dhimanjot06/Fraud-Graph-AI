@@ -1,0 +1,100 @@
+{% extends "app_base.html" %}
+{% block title %}{{ ring.code }} — FraudGraph AI{% endblock %}
+{% block page_title %}{{ ring.code }} <span class="chip chip-{{ ring.level }}" style="vertical-align:middle;margin-left:0.5em;">{{ ring.level|level_label }}</span>{% endblock %}
+{% block page_sub %}<div class="topbar-sub">{{ ring.ring_type|ring_type_label }} · {{ ring.size }} accounts · {{ ring.total_amount|money }} total · <a href="{{ url_for('analysis.results', run_id=run.id) }}">back to {{ run.dataset_name }}</a></div>{% endblock %}
+{% block content %}
+
+<div class="grid grid-2">
+  <div class="panel">
+    <h2>Risk score: {{ ring.risk_score }}/100</h2>
+    <div class="risk-bar" style="margin-bottom:1.2rem;">
+      <div class="risk-bar-track"><div class="risk-bar-fill {{ ring.level }}" style="width:{{ ring.risk_score }}%;"></div></div>
+      <span class="risk-bar-score mono">{{ ring.risk_score }}</span>
+    </div>
+    <h3 style="font-size:0.9rem;">Why this was flagged</h3>
+    <ul class="reason-list">
+      {% for reason in ring.reasons %}<li>{{ reason }}</li>{% endfor %}
+    </ul>
+  </div>
+  <div class="panel">
+    <h3 style="font-size:0.9rem;">Score breakdown</h3>
+    <div class="component-bars">
+      {% for key, c in ring.components.items() %}
+        <div class="component-row">
+          <span>{{ c.label }}</span>
+          <div class="risk-bar-track"><div class="risk-bar-fill {{ 'high' if c.value >= 0.7 else ('medium' if c.value >= 0.4 else '') }}" style="width:{{ (c.value * 100)|round|int }}%;"></div></div>
+          <span class="mono small">{{ (c.value * 100)|round|int }}%</span>
+        </div>
+      {% endfor %}
+    </div>
+    <div class="hr"></div>
+    <div class="grid grid-3">
+      <div class="stat"><span class="stat-value" style="font-size:1.2rem;">{{ ring.metrics.transactions }}</span><span class="stat-label">Transactions in ring</span></div>
+      <div class="stat"><span class="stat-value" style="font-size:1.2rem;">{{ ring.metrics.min_amount|money }}–{{ ring.metrics.max_amount|money }}</span><span class="stat-label">Amount range</span></div>
+      <div class="stat"><span class="stat-value" style="font-size:1.2rem;">{{ ring.metrics.first_seen|day if ring.metrics.first_seen else '–' }}</span><span class="stat-label">First seen</span></div>
+    </div>
+  </div>
+</div>
+
+<div class="section-head" style="margin-top:1.6rem;">
+  <h2>Ring network</h2>
+</div>
+<div class="graph-wrap">
+  <div id="ring-graph" style="min-height:360px;"></div>
+</div>
+
+<div class="section-head" style="margin-top:1.6rem;">
+  <h2>Members</h2>
+</div>
+<div class="table-wrap table-scroll">
+  <table>
+    <thead><tr><th>Account</th><th>Role</th><th>Account risk</th></tr></thead>
+    <tbody>
+      {% for m in members %}
+      <tr>
+        <td class="mono">{{ m.account }}</td>
+        <td><span class="role-tag {{ m.role|replace(' ', '-') }}">{{ m.role }}</span></td>
+        <td>{% if m.risk is not none %}
+          <div class="risk-bar" style="width:130px;">
+            <div class="risk-bar-track"><div class="risk-bar-fill {{ m.level }}" style="width:{{ m.risk }}%;"></div></div>
+            <span class="risk-bar-score mono">{{ m.risk }}</span>
+          </div>
+        {% else %}<span class="faint">–</span>{% endif %}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<div class="section-head" style="margin-top:1.6rem;">
+  <h2>Transactions in this ring</h2>
+  <div class="section-actions"><a href="{{ url_for('analysis.export', run_id=run.id, kind='transactions') }}" class="link-btn">Export all transactions CSV</a></div>
+</div>
+<div class="table-wrap table-scroll">
+  <table>
+    <thead><tr><th>Transaction</th><th>Sender</th><th>Receiver</th><th>Amount</th><th>Time</th><th>Risk</th></tr></thead>
+    <tbody>
+      {% for t in transactions %}
+      <tr>
+        <td class="mono">{{ t.tx_id }}</td>
+        <td class="mono">{{ t.sender }}</td>
+        <td class="mono">{{ t.receiver }}</td>
+        <td class="mono">{{ t.amount|money }}</td>
+        <td class="mono small">{{ t.timestamp|when if t.timestamp else '–' }}</td>
+        <td><span class="chip chip-{{ 'high' if t.risk_score >= 75 else ('medium' if t.risk_score >= 50 else 'low') }}">{{ t.risk_score }}</span></td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+{% endblock %}
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/graph.js') }}"></script>
+<script>
+fetch("{{ url_for('api.ring_graph', run_id=run.id, code=ring.code) }}")
+  .then(r => r.json())
+  .then(data => renderFraudGraph(document.getElementById('ring-graph'), data, { height: 380 }))
+  .catch(() => { document.getElementById('ring-graph').innerHTML = '<div class="graph-empty">The graph could not be loaded.</div>'; });
+</script>
+{% endblock %}

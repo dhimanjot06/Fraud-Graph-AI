@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block body %}
+<div class="shell">
+  <aside class="rail">
+    <a href="{{ url_for('dashboard.index') }}" class="rail-brand">
+      {% include "partials/mark.html" %}
+      <span class="rail-brand-name">FraudGraph<span>AI investigations</span></span>
+    </a>
+    <nav class="rail-nav">
+      <a class="rail-link {{ 'active' if request.endpoint == 'dashboard.index' }}" href="{{ url_for('dashboard.index') }}">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="1" y="9" width="3" height="6" stroke="currentColor"/><rect x="6.5" y="5" width="3" height="10" stroke="currentColor"/><rect x="12" y="1" width="3" height="14" stroke="currentColor"/></svg>
+        Dashboard
+      </a>
+      <a class="rail-link {{ 'active' if request.endpoint and request.endpoint.startswith('upload.') }}" href="{{ url_for('upload.index') }}">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 11V2M8 2L4.5 5.5M8 2l3.5 3.5" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/><path d="M2 11v2.5A1.5 1.5 0 0 0 3.5 15h9a1.5 1.5 0 0 0 1.5-1.5V11" stroke="currentColor"/></svg>
+        Transaction data
+      </a>
+      <a class="rail-link {{ 'active' if request.endpoint and request.endpoint.startswith('analysis.') }}" href="{{ url_for('analysis.index') }}">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="3" r="1.8" stroke="currentColor"/><circle cx="3" cy="13" r="1.8" stroke="currentColor"/><circle cx="13" cy="13" r="1.8" stroke="currentColor"/><path d="M7 4.6L4 11M9 4.6l3 6.4M4.8 13h6.4" stroke="currentColor"/></svg>
+        Fraud analysis
+      </a>
+    </nav>
+    <div class="rail-foot">
+      {% if current_user %}
+        <div class="rail-user"><strong>{{ current_user.name }}</strong>{{ current_user.email }}</div>
+        <form method="post" action="{{ url_for('auth.logout') }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button class="rail-logout" type="submit">Sign out</button>
+        </form>
+      {% endif %}
+    </div>
+  </aside>
+  <div class="main">
+    <div class="topbar">
+      <div class="topbar-main">
+        <div>
+          <h1>{% block page_title %}{% endblock %}</h1>
+          {% block page_sub %}{% endblock %}
+        </div>
+        {% block page_actions %}{% endblock %}
+      </div>
+    </div>
+    {% include "partials/flash.html" %}
+    <main id="main" class="content">
+      {% block content %}{% endblock %}
+    </main>
+  </div>
+</div>
+{% endblock %}
+{% block extra_head %}<link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}">{% endblock %}

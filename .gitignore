@@ -1,0 +1,26 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+*.egg-info/
+
+# Environment
+.env
+
+# Runtime data (keep the folder skeleton, ignore the content)
+data/*.db
+data/uploads/*
+data/processed/*
+data/raw/*
+!data/uploads/.gitkeep
+!data/processed/.gitkeep
+!data/raw/.gitkeep
+!data/raw/sample_transactions.csv
+!data/raw/sample_ground_truth.json
+
+# Editors / OS
+.idea/
+.vscode/
+.DS_Store

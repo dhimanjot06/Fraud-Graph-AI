@@ -1,0 +1,33 @@
+{% extends "public_base.html" %}
+{% block title %}Create an account — FraudGraph AI{% endblock %}
+{% block extra_head %}<link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}">{% endblock %}
+{% block content %}
+<div class="auth-wrap">
+  <div class="auth-card panel">
+    <h1>Create your account</h1>
+    <p class="auth-sub">Set up access to run fraud-ring analyses on your transaction data.</p>
+    <form method="post" novalidate>
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <div class="field">
+        <label for="name">Name</label>
+        <input type="text" id="name" name="name" value="{{ name|default('') }}" autocomplete="name" required>
+      </div>
+      <div class="field">
+        <label for="email">Email</label>
+        <input type="email" id="email" name="email" value="{{ email|default('') }}" autocomplete="email" required>
+      </div>
+      <div class="field">
+        <label for="password">Password</label>
+        <input type="password" id="password" name="password" autocomplete="new-password" minlength="8" required>
+        <div class="field-help">At least 8 characters, with letters as well as numbers.</div>
+      </div>
+      <div class="field">
+        <label for="confirm">Confirm password</label>
+        <input type="password" id="confirm" name="confirm" autocomplete="new-password" required>
+      </div>
+      <button type="submit" class="btn btn-signal btn-block">Create account</button>
+    </form>
+    <div class="auth-switch">Already have an account? <a href="{{ url_for('auth.login') }}">Sign in</a></div>
+  </div>
+</div>
+{% endblock %}

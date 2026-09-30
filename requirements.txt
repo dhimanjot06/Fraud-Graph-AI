@@ -1,0 +1,8 @@
+Flask>=3.0,<4.0
+pandas>=2.1
+numpy>=1.26
+networkx>=3.2
+scikit-learn>=1.4
+python-dotenv>=1.0
+gunicorn>=22.0; sys_platform != "win32"
+waitress>=3.0; sys_platform == "win32"

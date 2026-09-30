@@ -1,0 +1,71 @@
+{% extends "app_base.html" %}
+{% block title %}Dashboard — FraudGraph AI{% endblock %}
+{% block page_title %}Fraud Detection Dashboard{% endblock %}
+{% block page_sub %}<div class="topbar-sub">Real-time transaction monitoring and risk analysis</div>{% endblock %}
+{% block page_actions %}
+<div class="topbar-actions">
+  <button class="btn btn-ghost btn-sm" type="button">Export Report</button>
+  <span class="status-pill"><span class="status-dot"></span>System Active</span>
+</div>
+{% endblock %}
+{% block content %}
+
+{% if not latest %}
+  <div class="panel empty">
+    <h3>No analysis yet</h3>
+    <p>Upload transaction data or load the demo network, then run an analysis to see results here.</p>
+    <a href="{{ url_for('upload.index') }}" class="btn btn-signal" style="margin-top:0.8rem;">Add transaction data</a>
+  </div>
+{% else %}
+  <div class="grid grid-stats">
+    <div class="panel stat"><span class="stat-value">{{ latest.total_transactions|number }}</span><span class="stat-label">Total transactions</span></div>
+    <div class="panel stat"><span class="stat-value">{{ latest.total_accounts|number }}</span><span class="stat-label">Total accounts</span></div>
+    <div class="panel stat"><span class="stat-value mono" style="color:var(--signal);">{{ latest.flagged_transactions|number }}</span><span class="stat-label">Suspicious transactions</span></div>
+    <div class="panel stat"><span class="stat-value mono" style="color:var(--signal);">{{ latest.high_risk_accounts|number }}</span><span class="stat-label">High-risk accounts</span></div>
+    <div class="panel stat"><span class="stat-value mono" style="color:var(--signal);">{{ latest.rings_total|number }}</span><span class="stat-label">Detected fraud rings</span></div>
+  </div>
+
+  <div class="section-head" style="margin-top:1.6rem;">
+    <h2>Highest-risk rings — {{ latest.dataset_name }}</h2>
+    <div class="section-actions"><a href="{{ url_for('analysis.results', run_id=latest.id) }}" class="link-btn">View full analysis →</a></div>
+  </div>
+  {% if rings %}
+    <div class="table-wrap">
+      {% for r in rings %}
+        <a class="ring-card" href="{{ url_for('analysis.ring', run_id=latest.id, code=r.code) }}">
+          <div class="ring-row">
+            <span class="ring-code">{{ r.code }}</span>
+            <span class="ring-type">{{ r.ring_type|ring_type_label }}</span>
+            <span class="ring-meta">{{ r.size }} accounts · {{ r.total_amount|money }}</span>
+            <span class="chip chip-{{ r.level }}"><span class="chip-dot"></span>{{ r.risk_score|round(0, 'floor')|int }}/100</span>
+          </div>
+        </a>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="panel empty"><p>No rings scored above the reporting threshold in this run.</p></div>
+  {% endif %}
+
+  <div class="section-head" style="margin-top:1.6rem;">
+    <h2>Recent runs</h2>
+  </div>
+  <div class="table-wrap table-scroll">
+    <table>
+      <thead><tr><th>Dataset</th><th>Status</th><th>Rings</th><th>Flagged tx</th><th>Run at</th><th></th></tr></thead>
+      <tbody>
+        {% for r in runs %}
+        <tr>
+          <td>{{ r.dataset_name }}</td>
+          <td>{% if r.status == 'done' %}<span class="chip chip-low">done</span>{% elif r.status == 'failed' %}<span class="chip chip-high">failed</span>{% else %}<span class="chip chip-medium">running</span>{% endif %}</td>
+          <td>{{ r.summary.rings_total if r.summary.rings_total is not none else '–' }}</td>
+          <td>{{ r.summary.flagged_transactions if r.summary.flagged_transactions is not none else '–' }}</td>
+          <td class="mono small">{{ r.created_at|when }}</td>
+          <td>{% if r.status == 'done' %}<a href="{{ url_for('analysis.results', run_id=r.id) }}" class="link-btn">View</a>{% endif %}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+{% endif %}
+
+{% endblock %}

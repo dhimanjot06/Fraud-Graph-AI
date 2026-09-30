@@ -1,0 +1,12 @@
+{% extends "public_base.html" %}
+{% block title %}{{ title }} — FraudGraph AI{% endblock %}
+{% block content %}
+<div class="auth-wrap">
+  <div class="auth-card" style="max-width:480px;">
+    <div class="hero-eyebrow mono">Error {{ code }}</div>
+    <h1>{{ title }}</h1>
+    <p class="muted">{{ message }}</p>
+    <a href="{{ url_for('main.landing') }}" class="btn btn-outline">Back to the homepage</a>
+  </div>
+</div>
+{% endblock %}

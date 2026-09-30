@@ -1,0 +1,136 @@
+{% extends "app_base.html" %}
+{% block title %}Transaction data — FraudGraph AI{% endblock %}
+{% block page_title %}Transaction data{% endblock %}
+{% block page_sub %}<div class="topbar-sub">Upload a CSV of transactions, or load the built-in demo network to see the pipeline work.</div>{% endblock %}
+{% block content %}
+
+<div class="grid grid-2">
+  <div class="panel">
+    <h2>Upload a CSV</h2>
+    <p class="muted">Needs at minimum a sender, a receiver and an amount column. A timestamp column enables timing-based signals; recognised layouts (including common public datasets) are mapped automatically.</p>
+    <form method="post" action="{{ url_for('upload.upload') }}" enctype="multipart/form-data" id="upload-form">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <div class="field">
+        <label for="name">Dataset name</label>
+        <input type="text" id="name" name="name" placeholder="e.g. Q3 wire transfers">
+      </div>
+      <div class="upload-drop" id="drop-zone">
+        <p style="margin-bottom:0.6em;">Drag a CSV here, or</p>
+        <div style="margin-top: 1rem;">
+    <input
+        type="file"
+        id="file"
+        name="file"
+        accept=".csv,text/csv"
+        required
+        style="display:block; width:100%; padding:0.8rem; border:1px solid #DAD7CE; border-radius:6px; background:#fff;"
+    >
+</div>
+
+<p class="small" id="file-name" style="margin-top:0.8em;">
+    No file selected · up to {{ max_mb }} MB
+</p>
+      </div>
+      <button type="submit" class="btn btn-signal" style="margin-top:1rem;">Upload &amp; clean</button>
+    </form>
+    <div class="hr"></div>
+    <a href="{{ url_for('upload.template_csv') }}" class="link-btn">Download a template CSV</a>
+  </div>
+
+  <div class="panel">
+    <h2>Or start with the demo</h2>
+    <p class="muted">A synthetic network of 600 accounts with five planted fraud rings — three circular-payment loops and two collector hubs — hidden inside thousands of ordinary transfers.</p>
+    <ul class="reason-list">
+      <li>Known ground truth, so you can check what the pipeline finds against what was actually planted</li>
+      <li>Realistic camouflage: ring accounts also make ordinary payments</li>
+      <li>Ready in a few seconds, no file needed</li>
+    </ul>
+    <form method="post" action="{{ url_for('upload.demo') }}" style="margin-top:1rem;">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <button type="submit" class="btn btn-outline">Load demo data</button>
+    </form>
+  </div>
+</div>
+
+<div class="section-head" style="margin-top:2rem;">
+  <h2>Your datasets</h2>
+</div>
+{% if datasets %}
+  <div class="table-wrap">
+    {% for d in datasets %}
+      <div class="dataset-row">
+        <div style="flex:1;">
+          <div class="dataset-name">{{ d.name }}</div>
+          <div class="dataset-meta">{{ d.rows|number }} transactions · {{ d.accounts|number }} accounts
+            {% if d.source == 'demo' %}· <span class="badge-type">demo, ground truth included</span>{% endif %}
+            {% if not d.has_timestamps %}· <span class="badge-type">no timestamps</span>{% endif %}
+            · added {{ d.created_at|day }}</div>
+        </div>
+        <form method="post" action="{{ url_for('analysis.run', dataset_id=d.id) }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button type="submit" class="btn btn-signal btn-sm">Analyze</button>
+        </form>
+        {% if d.last_run_id %}
+          <a href="{{ url_for('analysis.results', run_id=d.last_run_id) }}" class="btn btn-outline btn-sm">Last results</a>
+        {% endif %}
+        <form method="post" action="{{ url_for('upload.delete', dataset_id=d.id) }}" onsubmit="return confirm('Delete this dataset and its analyses? This cannot be undone.');">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button type="submit" class="btn btn-outline btn-sm">Delete</button>
+        </form>
+      </div>
+    {% endfor %}
+  </div>
+{% else %}
+  <div class="panel empty">
+    <h3>No datasets yet</h3>
+    <p>Upload a CSV or load the demo data to run your first analysis.</p>
+  </div>
+{% endif %}
+
+{% endblock %}
+{% block scripts %}
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+    const input = document.getElementById("file");
+    const nameEl = document.getElementById("file-name");
+
+    console.log("FraudGraph upload script loaded");
+    console.log("File input:", input);
+
+    if (!input) {
+        console.error("ERROR: File input was not found.");
+        return;
+    }
+
+    input.addEventListener("change", function () {
+
+        console.log("File input changed.");
+        console.log("Files:", input.files);
+
+        if (input.files && input.files.length > 0) {
+
+            const file = input.files[0];
+
+            console.log("Selected file:", file.name);
+            console.log("File size:", file.size);
+
+            if (!file.name.toLowerCase().endsWith(".csv")) {
+                nameEl.textContent = "Please select a CSV file.";
+                input.value = "";
+                return;
+            }
+
+            nameEl.textContent =
+                "Selected: " + file.name +
+                " (" + (file.size / 1024).toFixed(1) + " KB)";
+
+        } else {
+
+            nameEl.textContent =
+                "No file selected · up to {{ max_mb }} MB";
+        }
+    });
+});
+</script>
+{% endblock %}

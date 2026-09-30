@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block body %}
+<header class="pub-nav">
+  <a href="{{ url_for('main.landing') }}" class="pub-brand">
+    {% include "partials/mark.html" %}
+    <span>FraudGraph <em>AI</em></span>
+  </a>
+  <nav class="pub-nav-links">
+    {% if current_user %}
+      <a href="{{ url_for('dashboard.index') }}" class="btn btn-sm">Go to dashboard</a>
+    {% else %}
+      <a href="{{ url_for('auth.login') }}" class="pub-link">Sign in</a>
+      <a href="{{ url_for('auth.register') }}" class="btn btn-sm">Get started</a>
+    {% endif %}
+  </nav>
+</header>
+{% include "partials/flash.html" %}
+<main id="main">
+  {% block content %}{% endblock %}
+</main>
+<footer class="pub-foot">
+  <div>FraudGraph AI — a research and demonstration project for graph-based fraud-ring detection.</div>
+</footer>
+{% endblock %}

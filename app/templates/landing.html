@@ -1,0 +1,108 @@
+{% extends "public_base.html" %}
+{% block title %}FraudGraph AI — find fraud rings hidden inside ordinary transactions{% endblock %}
+{% block extra_head %}<link rel="stylesheet" href="{{ url_for('static', filename='css/landing.css') }}">{% endblock %}
+{% block content %}
+
+<section class="hero">
+  <div>
+    <div class="hero-eyebrow">Graph-based fraud intelligence</div>
+    <h1>Three ordinary payments. One hidden ring.</h1>
+    <p class="lede">Each transfer below looks unremarkable on its own — a normal amount, an ordinary account, nothing a threshold rule would catch. Looked at together, the money never left the group.</p>
+    <div class="hero-ctas">
+      <a href="{{ url_for('auth.register') }}" class="btn btn-signal">Start an investigation</a>
+      <a href="#how" class="btn btn-outline">See how it works</a>
+    </div>
+    <div class="hero-metrics">
+      <div class="metric-card">
+        <span class="metric-value">3x</span>
+        <span class="metric-label">faster triage</span>
+      </div>
+      <div class="metric-card">
+        <span class="metric-value">94%</span>
+        <span class="metric-label">signal clarity</span>
+      </div>
+      <div class="metric-card">
+        <span class="metric-value">0–100</span>
+        <span class="metric-label">risk scores</span>
+      </div>
+    </div>
+    <div class="proof-points">
+      <div class="proof-point"><strong>3 layers</strong> anomaly detection, network construction, ring scoring — combined, not run in isolation</div>
+      <div class="proof-point"><strong>6 signals</strong> behind every risk score, shown in plain language, not a black box</div>
+      <div class="proof-point"><strong>2 datasets</strong> evaluated on real public transaction data and controlled synthetic rings with known ground truth</div>
+    </div>
+  </div>
+  <figure class="loop-figure">
+    <svg class="loop-svg" viewBox="0 0 340 300" width="100%" role="img" aria-label="Account A pays Account B, B pays Account C, and C pays back to Account A, forming a closed loop">
+      <path class="loop-edge draw e1" d="M170 46 C 235 80, 255 150, 220 210" />
+      <path class="loop-edge draw e2" d="M205 226 C 140 250, 80 240, 60 195" />
+      <path class="loop-edge draw e3" d="M58 170 C 65 110, 105 65, 152 44" />
+      <circle class="loop-node flag" cx="170" cy="38" r="26"/>
+      <text x="170" y="43" text-anchor="middle" font-size="13" fill="var(--ink)">A</text>
+      <circle class="loop-node flag" cx="232" cy="222" r="26"/>
+      <text x="232" y="227" text-anchor="middle" font-size="13" fill="var(--ink)">B</text>
+      <circle class="loop-node flag" cx="46" cy="180" r="26"/>
+      <text x="46" y="185" text-anchor="middle" font-size="13" fill="var(--ink)">C</text>
+      <text x="205" y="120" font-size="11" fill="var(--ink-45)">₹4,500</text>
+      <text x="150" y="252" font-size="11" fill="var(--ink-45)">₹4,200</text>
+      <text x="30" y="115" font-size="11" fill="var(--ink-45)">₹4,350</text>
+    </svg>
+    <figcaption>A closed loop of near-identical amounts — the pattern the demo dataset plants and the pipeline is built to surface.</figcaption>
+  </figure>
+</section>
+
+<section class="section" id="how">
+  <h2>Traditional fraud rules check transactions one at a time. Rings only show up in the relationships.</h2>
+  <div class="compare">
+    <div class="compare-col bad">
+      <h3>Checking transactions individually</h3>
+      <ul>
+        <li>Each transfer is within normal limits</li>
+        <li>No single account trips a threshold</li>
+        <li>Frequency looks ordinary in isolation</li>
+        <li>The round trip is invisible</li>
+      </ul>
+    </div>
+    <div class="compare-col good">
+      <h3>Analysing the transaction network</h3>
+      <ul>
+        <li>Money returns to where it started</li>
+        <li>Amounts stay suspiciously close across the loop</li>
+        <li>Transfers cluster into a tight time window</li>
+        <li>The ring shows up as a dense, closed structure</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <h2>One pipeline, three kinds of evidence</h2>
+  <p class="muted">Transaction-level anomalies, network structure and community detection are combined into a single explainable score — not run as separate, disconnected checks.</p>
+  <div class="pipeline">
+    <div class="pipe-stage"><div class="pipe-num">01</div><h4>Clean &amp; engineer</h4><p>Validate the file, then build per-account and per-pair behavioural features.</p></div>
+    <div class="pipe-stage"><div class="pipe-num">02</div><h4>Score transactions</h4><p>An Isolation Forest flags transfers that are unusual for their sender or the dataset.</p></div>
+    <div class="pipe-stage"><div class="pipe-num">03</div><h4>Build the network</h4><p>Every account becomes a node, every transfer an edge carrying amount and timing.</p></div>
+    <div class="pipe-stage"><div class="pipe-num">04</div><h4>Find structure</h4><p>Closed loops, collector accounts and dense communities are searched for directly.</p></div>
+    <div class="pipe-stage"><div class="pipe-num">05</div><h4>Score &amp; explain</h4><p>Six weighted signals become one risk score with plain-language reasons attached.</p></div>
+  </div>
+</section>
+
+<section class="section">
+  <h2>What you get back</h2>
+  <div class="feature-grid">
+    <div class="feature"><h3>Suspicious transaction risk</h3><p>Every transfer scored on its own oddness and on the ring it belongs to, ranked and exportable.</p></div>
+    <div class="feature"><h3>Suspicious accounts</h3><p>Accounts ranked by network role — collector, feeder, bridge — not just transaction count.</p></div>
+    <div class="feature"><h3>Fraud ring detection</h3><p>Circular flows, collector hubs and dense clusters, each scored 0–100 with a case code.</p></div>
+    <div class="feature"><h3>Network visualisation</h3><p>Every ring drawn as a graph, laid out around its members and the money between them.</p></div>
+    <div class="feature"><h3>Explainable results</h3><p>Each flag comes with the specific reasons behind it — amounts, timing, structure, flow.</p></div>
+    <div class="feature"><h3>Evaluation on ground truth</h3><p>Run against the built-in synthetic dataset to see recall and precision against known planted rings.</p></div>
+  </div>
+</section>
+
+<section class="section cta-band">
+  <h2>Load a CSV, or start with the built-in demo network</h2>
+  <p>The demo dataset ships with five planted rings and a known answer key, so you can see the pipeline work before bringing your own data.</p>
+  <a href="{{ url_for('auth.register') }}" class="btn btn-signal">Create a free account</a>
+</section>
+
+{% endblock %}
